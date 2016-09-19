@@ -14,8 +14,9 @@ session_opts = {
 app = beaker.middleware.SessionMiddleware(bottle.app(), session_opts)
 
 CONFIG = {
-    'client_id': '1167b08cb87d493793cab23fe9b8882d',
-    'client_secret': '1a22d617108a439c9ce8a3626b12ceb9',
+    'client_id': '04d8951caf16405ca00488b62e7c6251',#'1167b08cb87d493793cab23fe9b8882d',
+    'client_secret': '3f57fbc9e6d34914a272997c1e93d801',#'1a22d617108a439c9ce8a3626b12ceb9',
+
     'redirect_uri': 'http://localhost:8515/oauth_callback'
 }
 
@@ -34,7 +35,7 @@ reactor.register_callback(subscriptions.SubscriptionType.TAG, process_tag_update
 @route('/')
 def home():
     try:
-        url = unauthenticated_api.get_authorize_url(scope=["likes","comments"])
+        url = unauthenticated_api.get_authorize_url(scope=["likes","comments","public_content"])
         return '<a href="%s">Connect with Instagram</a>' % url
     except Exception as e:
         print(e)
@@ -64,6 +65,7 @@ def on_callback():
         if not access_token:
             return 'Could not get access token'
         api = client.InstagramAPI(access_token=access_token, client_secret=CONFIG['client_secret'])
+        print(access_token)
         request.session['access_token'] = access_token
     except Exception as e:
         print(e)
@@ -78,6 +80,7 @@ def on_recent():
     try:
         api = client.InstagramAPI(access_token=access_token, client_secret=CONFIG['client_secret'])
         recent_media, next = api.user_recent_media()
+        print(recent_media)
         photos = []
         for media in recent_media:
             photos.append('<div style="float:left;">')
@@ -109,11 +112,17 @@ def media_unlike(id):
 def on_user_media_feed():
     access_token = request.session['access_token']
     content = "<h2>User Media Feed</h2>"
+    print("===================")
     if not access_token:
         return 'Missing Access Token'
     try:
+        print("0")
         api = client.InstagramAPI(access_token=access_token, client_secret=CONFIG['client_secret'])
+        print("1")
         media_feed, next = api.user_media_feed()
+        print("2")
+        print(media_feed)
+        print("----------")
         photos = []
         for media in media_feed:
             photos.append('<img src="%s"/>' % media.get_standard_resolution_url())
